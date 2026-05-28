@@ -1,0 +1,6 @@
+1)We have to design decops agents for self healing of the pipelines and to fix/debug the errors when the pipelines run24/7 
+2)Design a agents which can analyse the k8 logs once u deploy the application k8s cluster which should have 
+capability to read the logs analyse the logs and identify the errors sending the alerts to slack/mail
+xxxxxxx4)Design a Agent which can understand the ur monitoring dashboards,thresholds if any threshold excesdded
+the agent has to create a alret and sent it mail/slack agent should have capability to create a alerts
+automatically based on prompts

@@ -1,0 +1,11 @@
+terraform.tfvars
+      ↓
+ROOT variables.tf
+      ↓
+ROOT main.tf
+      ↓
+module block passes values
+      ↓
+MODULE variables.tf
+      ↓
+MODULE main.tf

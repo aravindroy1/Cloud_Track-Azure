@@ -1,0 +1,286 @@
+!)Create a RG 
+2)Creat a vnet with ip range 10.0.0.0/16
+3)Inside vnet one private and public subnet (10.0.1.0`/24(public) and 10.0.2.0/24)
+4)Each subnet contains the single vm if we deployed applition in public subnet how we are going to expose 
+applicatin and if we deploy in private subnet how we are going to expose application
+5)Create a NAT gateway attach to private subnet 
+
+
+
+# Azure Network Architecture Setup
+
+---
+
+# 1) Create a Resource Group
+
+Resource Group is a logical container for Azure resources.
+
+Example:
+- Resource Group Name: review-rg
+- Region: Central India
+
+---
+
+# 2) Create a VNet
+
+Create a Virtual Network with CIDR:
+
+10.0.0.0/16
+
+Range:
+10.0.0.0 → 10.0.255.255
+
+Purpose:
+- Acts as private network in Azure
+- Enables communication between Azure resources
+
+---
+
+# 3) Create Public and Private Subnets
+
+Inside VNet create 2 subnets.
+
+| Subnet | CIDR | Purpose |
+|---------|------|----------|
+| Public Subnet | 10.0.1.0/24 | Internet-facing resources |
+| Private Subnet | 10.0.2.0/24 | Internal resources |
+
+---
+
+# Subnet Ranges
+
+## Public Subnet
+10.0.1.0/24
+
+Range:
+10.0.1.0 → 10.0.1.255
+
+---
+
+## Private Subnet
+10.0.2.0/24
+
+Range:
+10.0.2.0 → 10.0.2.255
+
+---
+
+# 4) Deploy One VM in Each Subnet
+
+| VM | Subnet |
+|----|---------|
+| Public VM | Public Subnet |
+| Private VM | Private Subnet |
+
+---
+
+# Public VM Architecture
+
+Internet
+   |
+Public IP
+   |
+Public VM
+(10.0.1.x)
+
+---
+
+# How Public Subnet Application is Exposed
+
+If application is deployed inside Public VM:
+
+Example:
+- Nginx
+- Node.js App
+- Python App
+
+We expose using:
+- Public IP
+- NSG Rules
+- Load Balancer/Application Gateway (optional)
+
+---
+
+# Flow
+
+User
+   |
+Public IP
+   |
+VM
+   |
+Application
+
+---
+
+# Required Configuration
+
+## Attach Public IP to VM
+
+Example:
+20.x.x.x
+
+---
+
+## Open NSG Ports
+
+| Port | Purpose |
+|------|----------|
+| 80 | HTTP |
+| 443 | HTTPS |
+| 22 | SSH |
+
+---
+
+# Access Example
+
+http://20.x.x.x
+
+or
+
+https://yourdomain.com
+
+---
+
+# Private VM Architecture
+
+Internet
+   |
+Application Gateway / Load Balancer / Bastion
+   |
+Private VM
+(10.0.2.x)
+
+Private VM has:
+- No public IP
+- No direct internet exposure
+
+---
+
+# How Private Subnet Application is Exposed
+
+Applications in private subnet cannot be accessed directly from internet.
+
+We expose using:
+
+| Method | Purpose |
+|---------|----------|
+| Application Gateway | Layer 7 routing |
+| Load Balancer | Layer 4 routing |
+| Reverse Proxy | Application exposure |
+| VPN/Bastion | Admin access |
+
+---
+
+# Recommended Architecture
+
+Internet
+   |
+Application Gateway
+(Public IP)
+   |
+Private VM
+(Application)
+
+---
+
+# Flow
+
+User
+   |
+Public IP
+(Application Gateway)
+   |
+Private VM
+   |
+Application
+
+---
+
+# Advantages of Private Deployment
+
+- More secure
+- No direct internet access
+- Reduced attack surface
+- Better enterprise architecture
+
+---
+
+# 5) Create NAT Gateway and Attach to Private Subnet
+
+---
+
+# Why NAT Gateway?
+
+Private VM has:
+- No public IP
+- Cannot access internet directly
+
+But VM may need:
+- OS updates
+- Docker image pull
+- API access
+- Package installation
+
+---
+
+# NAT Gateway Architecture
+
+Private VM
+(10.0.2.x)
+   |
+NAT Gateway
+   |
+Public IP
+   |
+Internet
+
+---
+
+# Working
+
+Example:
+
+Private VM:
+10.0.2.4
+
+NAT translates:
+10.0.2.4 → Public IP
+
+Internet sees only NAT public IP.
+
+---
+
+# Important Points
+
+NAT Gateway:
+- Outbound internet only
+- No inbound access
+- More secure than public IP
+- Shared across multiple VMs
+
+---
+
+# Final Architecture
+
+                    Internet
+                        |
+                Application Gateway
+                     (Public IP)
+                        |
+                -----------------
+                |               |
+        Public Subnet      Private Subnet
+        10.0.1.0/24        10.0.2.0/24
+              |                  |
+         Public VM          Private VM
+                                 |
+                           NAT Gateway
+                                 |
+                             Internet
+
+---
+
+# Real Interview Explanation
+
+“We created a VNet with CIDR 10.0.0.0/16 and divided it into public and private subnets. Public subnet resources are exposed using public IPs and NSG rules. Private subnet resources are exposed securely through Application Gateway or Load Balancer. NAT Gateway is attached to the private subnet to provide secure outbound internet connectivity without exposing the VM directly to the internet.”

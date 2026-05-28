@@ -1,0 +1,360 @@
+Terraform
+
+Ehy terra why not others 
+1)Multi Cloud support (with the single script we can automate the infra structure )
+2)State Management 
+3)Reusability (With the single script w can create a multiple 
+envrionment every env has different state file)
+4)Modularity(Braking into modules if wanna change we make change in the particular module)
+
+How terraform will communicate with the cloud provider
+
+*It will communicate with help of api key 
+*Terraform.log file 
+
+*terrafrom init
+*terraform apply 
+*terraform plan 
+*terraform validate
+*terraform lock mechanism 
+*terraform destroy 
+*terragrant / terraform workspcae
+
+
+
+# Terraform and Azure CLI Documentation
+
+# What is Terraform?
+
+Terraform is an Infrastructure as Code (IaC) tool developed by HashiCorp.
+
+Terraform is used to:
+- automate cloud infrastructure
+- create Azure resources using code
+- manage infrastructure consistently
+
+Instead of manually creating resources in Azure Portal, we write code in `.tf` files.
+
+Example:
+
+```hcl
+resource "azurerm_resource_group" "example" {
+  name     = "example-resources"
+  location = "Central India"
+}
+
+Terraform reads this code and creates the resource in Azure.
+
+What is Azure CLI?
+
+Azure CLI is a command-line tool used to interact with Microsoft Azure.
+
+Azure CLI is used for:
+
+Azure authentication
+resource management
+automation
+scripting
+
+Terraform uses Azure CLI authentication to connect with Azure.
+
+Command:
+
+az login
+
+This command authenticates the user with Azure.
+
+Terraform Installation
+Step 1 — Download Terraform
+
+Download Terraform from:
+
+https://developer.hashicorp.com/terraform/install
+
+Download:
+
+windows_amd64 version for Intel/AMD systems
+Step 2 — Extract Terraform
+
+After extracting the ZIP file:
+
+terraform.exe
+
+will be available.
+
+Step 3 — Create Terraform Folder
+
+Create folder:
+
+C:\terraform
+
+Move:
+
+terraform.exe
+
+inside:
+
+C:\terraform
+
+Final path:
+
+C:\terraform\terraform.exe
+PATH Environment Variable
+
+PATH is a Windows environment variable.
+
+PATH contains folders where Windows searches for commands.
+
+When we run:
+
+terraform
+
+Windows searches all folders inside PATH for:
+
+terraform.exe
+
+If Terraform folder is not added to PATH:
+
+terraform is not recognized
+
+error appears.
+
+Add Terraform to PATH
+
+Add this path into Environment Variables:
+
+C:\terraform
+
+Purpose:
+
+allows Terraform command to work globally
+Verify Terraform Installation
+
+Command:
+
+terraform -version
+
+Expected output:
+
+Terraform v1.15.2
+Azure CLI Installation
+
+Download Azure CLI:
+
+https://aka.ms/installazurecliwindows
+
+Install normally.
+
+Verify Azure CLI
+
+Command:
+
+az version
+
+Expected output:
+
+{
+  "azure-cli": "2.xx.x"
+}
+Azure Authentication
+
+Command:
+
+az login
+
+What happens internally:
+
+Browser opens
+User logs into Azure account
+Azure generates access token
+Azure CLI stores token locally
+Terraform uses this token automatically
+
+Authentication flow:
+
+User → Azure CLI → Azure Token → Terraform → Azure APIs
+Terraform Project Structure
+
+Example:
+
+Azure-RG/
+│
+├── main.tf
+├── terraform.tfstate
+├── .terraform/
+└── .terraform.lock.hcl
+Terraform Configuration File
+
+File:
+
+main.tf
+
+Code:
+
+terraform {
+  required_providers {
+    azurerm = {
+      source  = "hashicorp/azurerm"
+      version = "4.71.0"
+    }
+  }
+}
+
+provider "azurerm" {
+  features {}
+}
+
+resource "azurerm_resource_group" "example" {
+  name     = "example-resources"
+  location = "Central India"
+}
+Explanation of Terraform Code
+terraform block
+
+Defines required providers.
+
+required_providers
+
+Specifies Azure provider plugin:
+
+azurerm
+provider block
+
+Connects Terraform with Azure.
+
+Example:
+
+provider "azurerm" {
+  features {}
+}
+resource block
+
+Defines Azure resource.
+
+Example:
+
+resource "azurerm_resource_group" "example"
+Resource Name
+example-resources
+
+Actual Azure Resource Group name.
+
+Location
+Central India
+
+Azure region where resource will be created.
+
+Terraform Lifecycle
+1. terraform init
+
+Command:
+
+terraform init
+
+Purpose:
+
+initializes Terraform
+downloads Azure provider plugin
+creates .terraform folder
+2. terraform validate
+
+Command:
+
+terraform validate
+
+Purpose:
+
+validates Terraform syntax
+3. terraform plan
+
+Command:
+
+terraform plan
+
+Purpose:
+
+previews infrastructure changes
+shows resources Terraform will create
+
+No resources are created yet.
+
+4. terraform apply
+
+Command:
+
+terraform apply
+
+Purpose:
+
+creates infrastructure in Azure
+
+Terraform:
+
+reads .tf files
+authenticates using Azure CLI token
+calls Azure APIs
+Azure creates resources
+5. terraform destroy
+
+Command:
+
+terraform destroy
+
+Purpose:
+
+deletes Terraform-managed infrastructure
+Important Terraform Files
+File/Folder	Purpose
+main.tf	Infrastructure code
+.terraform/	Provider plugins
+terraform.tfstate	Tracks infrastructure
+.terraform.lock.hcl	Provider version lock
+Terraform State File
+
+Terraform creates:
+
+terraform.tfstate
+
+Purpose:
+
+stores infrastructure information
+tracks created resources
+helps Terraform detect changes
+
+Without state file:
+
+Terraform cannot track infrastructure properly
+Infrastructure as Code (IaC)
+
+Infrastructure as Code means:
+
+infrastructure managed using code
+automation instead of manual Azure Portal operations
+
+Benefits:
+
+automation
+consistency
+repeatability
+version control
+scalability
+Terraform Workflow
+Write Code
+    ↓
+terraform init
+    ↓
+terraform validate
+    ↓
+terraform plan
+    ↓
+terraform apply
+Final Outcome
+
+Successfully configured:
+
+Terraform
+Azure CLI
+Azure authentication
+Terraform environment
+
+Ready to create Azure infrastructure using Terraform.

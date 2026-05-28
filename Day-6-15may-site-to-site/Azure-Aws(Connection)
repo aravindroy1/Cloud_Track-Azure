@@ -1,0 +1,731 @@
+# Azure ↔ AWS Site-to-Site VPN Documentation
+
+# Objective
+
+Establish secure private communication between:
+
+* Azure Virtual Network (VNet)
+* AWS Virtual Private Cloud (VPC)
+
+using:
+
+* IPSec VPN Tunnel
+* Azure VPN Gateway
+* AWS Virtual Private Gateway
+
+Goal:
+
+* Azure Private VM should communicate with AWS Private EC2 using private IP addresses.
+* No public IP exposure for workloads.
+* Secure encrypted communication over the internet.
+
+---
+
+# Final Architecture
+
+```text
+Azure VNet (10.0.0.0/16)
+│
+├── Azure VM (10.0.1.4)
+│
+├── Azure VPN Gateway
+│      Public IP: 4.187.241.207
+│
+└──────────── IPSec VPN Tunnel ────────────┐
+                                           │
+                                           │
+AWS Virtual Private Gateway (VGW)
+│
+├── AWS VPC (172.16.0.0/16)
+│
+└── AWS EC2 Instance (172.16.0.130)
+```
+
+---
+
+# Networking Concepts Used
+
+| Concept                 | Purpose                            |
+| ----------------------- | ---------------------------------- |
+| VNet/VPC                | Private network in cloud           |
+| Subnet                  | Smaller network inside VNet/VPC    |
+| VPN Gateway             | Creates encrypted tunnel           |
+| IPSec                   | Encrypts traffic                   |
+| IKE                     | Negotiates VPN connection          |
+| Diffie-Hellman          | Securely generates shared secret   |
+| Route Table             | Decides traffic path               |
+| NSG/Security Group      | Firewall rules                     |
+| Local Network Gateway   | Represents remote network in Azure |
+| Virtual Private Gateway | AWS VPN endpoint                   |
+
+---
+
+# Azure Side Configuration
+
+---
+
+# Step 1 — Create Resource Group
+
+Azure Portal:
+
+```text
+Resource Groups
+→ Create
+```
+
+Configuration:
+
+| Field               | Value         |
+| ------------------- | ------------- |
+| Resource Group Name | Aravind-RG    |
+| Region              | Central India |
+
+Purpose:
+
+* Logical container for Azure resources.
+
+---
+
+# Step 2 — Create Virtual Network (VNet)
+
+Azure Portal:
+
+```text
+Virtual Networks
+→ Create
+```
+
+Configuration:
+
+| Field         | Value        |
+| ------------- | ------------ |
+| Name          | Aravind-VNET |
+| Address Space | 10.0.0.0/16  |
+
+Purpose:
+
+* Private network in Azure.
+
+---
+
+# Step 3 — Create Subnet
+
+Subnet Configuration:
+
+| Field       | Value        |
+| ----------- | ------------ |
+| Subnet Name | Azure-Subnet |
+| CIDR        | 10.0.1.0/24  |
+
+Purpose:
+
+* Contains Azure VM.
+
+---
+
+# Step 4 — Create GatewaySubnet
+
+VERY IMPORTANT.
+
+Azure VPN Gateway requires a dedicated subnet.
+
+Configuration:
+
+| Field       | Value         |
+| ----------- | ------------- |
+| Subnet Name | GatewaySubnet |
+| CIDR        | 10.0.255.0/27 |
+
+Purpose:
+
+* Azure deploys VPN Gateway instances inside this subnet.
+
+---
+
+# Step 5 — Create Azure VM
+
+Azure Portal:
+
+```text
+Virtual Machines
+→ Create
+```
+
+Configuration:
+
+| Field      | Value        |
+| ---------- | ------------ |
+| VM Name    | Aravind-VM   |
+| Subnet     | Azure-Subnet |
+| Private IP | 10.0.1.4     |
+| Public IP  | Optional     |
+| OS         | Ubuntu       |
+
+Purpose:
+
+* VM inside Azure private network.
+
+---
+
+# Step 6 — Create Azure VPN Gateway
+
+Azure Portal:
+
+```text
+Virtual Network Gateways
+→ Create
+```
+
+Configuration:
+
+| Field         | Value           |
+| ------------- | --------------- |
+| Name          | Aravind-Gateway |
+| Gateway Type  | VPN             |
+| SKU           | VpnGw1          |
+| Generation    | Generation1     |
+| VNet          | Aravind-VNET    |
+| GatewaySubnet | 10.0.255.0/27   |
+| Public IP     | VPN-PublicIP    |
+| Active-Active | Disabled        |
+| BGP           | Disabled        |
+
+Purpose:
+
+* Azure VPN endpoint.
+* Handles IPSec tunnel.
+* Performs encryption/decryption.
+
+Deployment time:
+
+* 30–45 minutes.
+
+Azure VPN Public IP obtained:
+
+```text
+4.187.241.207
+```
+
+---
+
+# AWS Side Configuration
+
+---
+
+# Step 7 — Create AWS VPC
+
+AWS Console:
+
+```text
+VPC
+→ Create VPC
+```
+
+Configuration:
+
+| Field | Value         |
+| ----- | ------------- |
+| Name  | Aravind-VPC   |
+| CIDR  | 172.16.0.0/16 |
+
+Purpose:
+
+* AWS private network.
+
+NOTE:
+
+* CIDR must NOT overlap with Azure VNet.
+
+---
+
+# Step 8 — Create AWS Subnet
+
+Configuration:
+
+| Field | Value          |
+| ----- | -------------- |
+| Name  | Aravind-Subnet |
+| CIDR  | 172.16.0.0/24  |
+
+Purpose:
+
+* Contains EC2 instance.
+
+---
+
+# Step 9 — Create EC2 Instance
+
+AWS Console:
+
+```text
+EC2
+→ Launch Instance
+```
+
+Configuration:
+
+| Field         | Value          |
+| ------------- | -------------- |
+| Instance Name | Aravind-AWS    |
+| VPC           | Aravind-VPC    |
+| Subnet        | Aravind-Subnet |
+| Private IP    | 172.16.0.130   |
+| Public IP     | Disabled       |
+| OS            | Ubuntu         |
+
+Purpose:
+
+* Private AWS workload.
+
+---
+
+# Step 10 — Create Virtual Private Gateway (VGW)
+
+AWS Console:
+
+```text
+VPC
+→ Virtual Private Gateways
+→ Create
+```
+
+Configuration:
+
+| Field | Value   |
+| ----- | ------- |
+| Name  | aws-vgw |
+
+After creation:
+
+Attach to:
+
+```text
+Aravind-VPC
+```
+
+Purpose:
+
+* AWS VPN endpoint.
+
+Equivalent to:
+
+```text
+Azure VPN Gateway
+```
+
+---
+
+# Step 11 — Create Customer Gateway
+
+AWS Console:
+
+```text
+VPC
+→ Customer Gateways
+→ Create
+```
+
+Configuration:
+
+| Field      | Value         |
+| ---------- | ------------- |
+| Name       | azure-cgw     |
+| Routing    | Static        |
+| IP Address | 4.187.241.207 |
+
+Purpose:
+
+* Represents Azure VPN Gateway inside AWS.
+
+---
+
+# Step 12 — Create Site-to-Site VPN Connection
+
+AWS Console:
+
+```text
+VPC
+→ Site-to-Site VPN Connections
+→ Create
+```
+
+Configuration:
+
+| Field               | Value                   |
+| ------------------- | ----------------------- |
+| Name                | aws-azure-VPN           |
+| Target Gateway Type | Virtual Private Gateway |
+| VGW                 | aws-vgw                 |
+| Customer Gateway    | azure-cgw               |
+| Routing             | Static                  |
+| Static CIDR         | 10.0.0.0/16             |
+
+Purpose:
+
+* Creates IPSec VPN tunnel.
+
+---
+
+# Step 13 — Download VPN Configuration
+
+AWS:
+
+```text
+VPN Connection
+→ Download Configuration
+```
+
+Options selected:
+
+| Field       | Value   |
+| ----------- | ------- |
+| Vendor      | Generic |
+| Platform    | Generic |
+| Software    | Generic |
+| IKE Version | IKEv2   |
+
+Important values obtained:
+
+| Item                | Value            |
+| ------------------- | ---------------- |
+| Tunnel 1 Outside IP | 3.7.185.231      |
+| Pre-Shared Key      | Generated by AWS |
+
+Purpose:
+
+* Used to configure Azure side.
+
+---
+
+# Azure VPN Connection Configuration
+
+---
+
+# Step 14 — Create Local Network Gateway
+
+Azure Portal:
+
+```text
+Local Network Gateways
+→ Create
+```
+
+Configuration:
+
+| Field         | Value         |
+| ------------- | ------------- |
+| Name          | aws-lng       |
+| IP Address    | 3.7.185.231   |
+| Address Space | 172.16.0.0/16 |
+
+Purpose:
+
+* Represents AWS network inside Azure.
+
+Important:
+
+| Field         | Meaning                  |
+| ------------- | ------------------------ |
+| IP Address    | AWS VPN tunnel public IP |
+| Address Space | AWS VPC CIDR             |
+
+---
+
+# Step 15 — Create Azure VPN Connection
+
+Azure Portal:
+
+```text
+Virtual Network Gateways
+→ Aravind-Gateway
+→ Connections
+→ Add
+```
+
+Configuration:
+
+| Field                 | Value                |
+| --------------------- | -------------------- |
+| Name                  | azure-aws-connection |
+| Connection Type       | Site-to-Site (IPSec) |
+| Local Network Gateway | aws-lng              |
+| IKE Protocol          | IKEv2                |
+| Shared Key            | Same PSK from AWS    |
+
+Purpose:
+
+* Establishes VPN tunnel.
+
+---
+
+# Route Table Configuration
+
+---
+
+# Step 16 — Configure AWS Route Table
+
+AWS Console:
+
+```text
+VPC
+→ Route Tables
+```
+
+Routes configured:
+
+| Destination   | Target                  |
+| ------------- | ----------------------- |
+| 172.16.0.0/16 | local                   |
+| 10.0.0.0/16   | Virtual Private Gateway |
+
+VGW:
+
+```text
+vgw-058ed99b016ac457b
+```
+
+Purpose:
+
+* Sends Azure traffic into VPN tunnel.
+
+---
+
+# Step 17 — Associate Route Table with Subnet
+
+VERY IMPORTANT.
+
+Issue faced:
+
+* Route table was NOT associated with subnet.
+* Traffic never entered VPN tunnel.
+* Ping failed.
+
+Fix:
+
+```text
+Route Table
+→ Subnet Associations
+→ Edit subnet associations
+→ Select Aravind-Subnet
+→ Save
+```
+
+This fixed VPN routing.
+
+---
+
+# Security Configuration
+
+---
+
+# Step 18 — Configure AWS Security Group
+
+Inbound rules:
+
+| Type            | Source      |
+| --------------- | ----------- |
+| All ICMP - IPv4 | 10.0.0.0/16 |
+| SSH             | 10.0.0.0/16 |
+
+Purpose:
+
+* Allows Azure network traffic.
+
+---
+
+# Step 19 — Configure Azure NSG
+
+Inbound rule:
+
+| Protocol | Source        |
+| -------- | ------------- |
+| ICMPv4   | 172.16.0.0/16 |
+
+Purpose:
+
+* Allows AWS network traffic.
+
+---
+
+# Step 20 — Verify Linux Firewall
+
+Commands used:
+
+```bash
+sudo ufw status
+```
+
+Result:
+
+```text
+Status: inactive
+```
+
+Purpose:
+
+* Ensure OS firewall does not block ICMP.
+
+---
+
+# VPN Verification
+
+---
+
+# Step 21 — Verify Tunnel Status
+
+AWS:
+
+```text
+VPC
+→ Site-to-Site VPN Connections
+→ Tunnel Details
+```
+
+Tunnel Status:
+
+| Tunnel   | Status |
+| -------- | ------ |
+| Tunnel 1 | UP     |
+| Tunnel 2 | DOWN   |
+
+NOTE:
+
+* Tunnel 1 sufficient for learning.
+* Tunnel 2 used for High Availability.
+
+---
+
+# Step 22 — Test Connectivity
+
+From Azure VM:
+
+```bash
+ping 172.16.0.130
+```
+
+Result:
+
+```text
+18 packets transmitted
+18 received
+0% packet loss
+```
+
+Successful communication established.
+
+---
+
+# Final Result
+
+Successfully established:
+
+```text
+Azure ↔ AWS Site-to-Site VPN
+```
+
+using:
+
+* IPSec
+* IKEv2
+* Diffie-Hellman
+* Route Tables
+* Security Groups
+* NSGs
+
+Features achieved:
+
+* Private communication
+* Encrypted traffic
+* Hybrid cloud networking
+* No public exposure of workloads
+* Secure inter-cloud connectivity
+
+---
+
+# Important Learnings
+
+---
+
+# Difference Between Components
+
+| Component             | Purpose                   |
+| --------------------- | ------------------------- |
+| VPN Gateway           | Creates VPN tunnel        |
+| Local Network Gateway | Represents remote network |
+| VGW                   | AWS VPN endpoint          |
+| Route Table           | Decides traffic path      |
+| Security Group        | AWS firewall              |
+| NSG                   | Azure firewall            |
+
+---
+
+# How VPN Traffic Flows
+
+```text
+Azure VM
+↓
+Azure Route Table
+↓
+Azure VPN Gateway
+↓
+Encrypted IPSec Tunnel
+↓
+AWS Virtual Private Gateway
+↓
+AWS Route Table
+↓
+AWS EC2
+```
+
+---
+
+# Key Troubleshooting Performed
+
+| Problem         | Fix                                    |
+| --------------- | -------------------------------------- |
+| Tunnel Down     | Created Azure VPN connection correctly |
+| Ping Failure    | Fixed Route Table association          |
+| Security Issues | Added ICMP rules                       |
+| Routing Failure | Added VPN route                        |
+
+---
+
+# Technologies Used
+
+| Technology     | Role                  |
+| -------------- | --------------------- |
+| IPSec          | Encrypts packets      |
+| IKEv2          | Negotiates VPN tunnel |
+| Diffie-Hellman | Creates shared secret |
+| CIDR           | Defines IP ranges     |
+| Route Tables   | Traffic routing       |
+| ICMP           | Ping testing          |
+
+---
+
+# Real-World Use Cases
+
+* Hybrid Cloud
+* Multi-Cloud Architecture
+* Private Database Replication
+* Kubernetes Multi-Cloud Networking
+* Enterprise VPN Connectivity
+* Secure Backend Communication
+
+---
+
+# Conclusion
+
+Successfully built a secure Azure ↔ AWS hybrid cloud network using Site-to-Site VPN.
+
+Key outcomes:
+
+* Learned cloud networking fundamentals.
+* Understood IPSec VPN architecture.
+* Configured routing and firewall rules.
+* Achieved private encrypted communication between two cloud providers.
+* Performed real-world troubleshooting.
+
+
+
+

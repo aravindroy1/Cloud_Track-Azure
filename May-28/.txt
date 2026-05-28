@@ -1,0 +1,352 @@
+# Azure App Services + Cosmos DB + Microservices Notes
+
+# Goal
+
+Deploy a microservices-based application in Azure using:
+
+* Azure App Services
+* Azure Cosmos DB (MongoDB API)
+* GitHub Deployment
+* Without Docker
+* Without AKS
+
+---
+
+# Architecture We Built
+
+Frontend App Service
+↓
+Auth App Service
+↓
+Azure Cosmos DB (MongoDB API)
+
+---
+
+# What We Learned Today
+
+## 1. Difference Between Bastion Host and Jump Box
+
+### Bastion Host
+
+* Azure-managed secure SSH/RDP access
+* Browser-based access
+* No public IP required for VMs
+* Mainly for secure access
+
+### Jump Box
+
+* Separate VM used for administration
+* Tools installed inside it
+* Used for kubectl, terraform, docker, etc.
+* Manual management required
+
+### Important Understanding
+
+Bastion gives access TO VM.
+
+Jump Box IS a VM where tools exist.
+
+---
+
+# 2. Azure AKS Availability Zone Error
+
+Error:
+
+AvailabilityZoneNotSupported
+
+Reason:
+
+* Central India region does not support availability zones for AKS node pools.
+
+Fix:
+
+* Remove Availability Zones while creating AKS.
+
+---
+
+# 3. Cosmos DB Creation
+
+Created:
+
+* Azure Cosmos DB for MongoDB
+
+Important Settings:
+
+* API: MongoDB
+* Public Access: Enabled
+* TLS 1.2
+* Firewall allowed
+
+---
+
+# 4. MongoDB Connection String
+
+Used Cosmos DB MongoDB connection string:
+
+mongodb://username:password@fitnessmongo.mongo.cosmos.azure.com:10255/?ssl=true&replicaSet=globaldb&retrywrites=false&maxIdleTimeMS=120000&appName=@fitnessmongo@
+
+---
+
+# 5. Why App Was Failing
+
+Problems faced:
+
+## Missing dotenv package
+
+Error:
+Cannot find module 'dotenv'
+
+Fix:
+Added dependencies in package.json
+
+---
+
+## Missing dd-trace
+
+Error:
+Cannot find module 'dd-trace'
+
+Fix:
+Removed Datadog imports from:
+
+* app.js
+* auth routes
+
+---
+
+## GitHub Actions test failure
+
+Error:
+exit 1
+
+Fix:
+Changed:
+
+"test": "exit 0"
+
+---
+
+# 6. App Service Deployment
+
+Initially:
+
+* Tried Docker deployment
+* Tried ACR
+* Tried Cloud Shell Docker build
+
+Problems:
+
+* Cloud Shell has no Docker daemon
+* ACR Tasks blocked in subscription
+
+Decision:
+
+* Switched to direct code deployment
+
+---
+
+# 7. App Service Deployment Model
+
+Final approach:
+
+GitHub Repo
+↓
+GitHub Actions
+↓
+Azure App Service
+↓
+Cosmos DB
+
+---
+
+# 8. Why We Avoided Docker
+
+Reason:
+
+* Simpler learning path
+* Easier debugging
+* Faster deployment
+* Subscription limitations
+
+---
+
+# 9. Microservices Understanding
+
+One App Service = One Microservice
+
+Examples:
+
+* Auth Service → Separate App Service
+* Frontend → Separate App Service
+
+Why?
+Because App Service is not a Kubernetes orchestrator.
+
+---
+
+# 10. Auth Service Deployment
+
+Used:
+
+* FastAPI
+* Python 3.9
+* Cosmos DB MongoDB
+
+Files required:
+
+main.py
+requirements.txt
+startup.sh
+
+---
+
+# 11. Important Environment Variables
+
+Added inside App Service:
+
+MONGO_URL
+JWT_SECRET
+
+---
+
+# 12. Startup Command
+
+Added:
+
+bash startup.sh
+
+startup.sh contained:
+
+uvicorn main:app --host 0.0.0.0 --port 8000
+
+---
+
+# 13. Important FastAPI Endpoints
+
+## Health Endpoint
+
+/health
+
+Response:
+
+{
+"status": "healthy"
+}
+
+---
+
+# 14. App Service Configuration
+
+Important Settings:
+
+## Publish
+
+Code
+
+## Runtime
+
+Python 3.9
+
+## OS
+
+Linux
+
+---
+
+# 15. Final Simplified Repo Structure
+
+washify-auth-service/
+│
+├── main.py
+├── requirements.txt
+└── startup.sh
+
+---
+
+# 16. Final Learning Summary
+
+Today we learned:
+
+* Azure App Services
+* Cosmos DB Mongo API
+* GitHub deployment
+* FastAPI deployment
+* Environment variables
+* App Service startup commands
+* Microservices deployment strategy
+* Bastion vs Jump Box
+* AKS zone limitations
+* Debugging Azure deployment errors
+* CI/CD basics
+* Why one App Service per microservice
+
+---
+
+# 17. Key Real-World Understanding
+
+## App Service
+
+Good for:
+
+* Small microservices
+* APIs
+* Learning cloud deployments
+* Simpler architectures
+
+## AKS
+
+Good for:
+
+* Large-scale microservices
+* Auto scaling
+* Service mesh
+* Enterprise orchestration
+
+---
+
+# 18. Final Production Flow
+
+Developer Pushes Code
+↓
+GitHub
+↓
+Azure App Service Deploys Automatically
+↓
+Application Connects to Cosmos DB
+↓
+Frontend Calls Auth Service
+
+---
+
+# 19. Biggest Concept Learned
+
+Azure App Service is NOT Kubernetes.
+
+It runs:
+
+* one application
+* one runtime
+* one service
+
+Per App Service instance.
+
+For multiple microservices:
+
+* multiple App Services are created.
+
+---
+
+# 20. Next Steps
+
+Next we can learn:
+
+* Frontend deployment
+* API Gateway
+* Azure Application Gateway
+* Azure Front Door
+* Azure Key Vault
+* Azure Monitor
+* CI/CD pipelines
+* Azure Container Apps
+* AKS deployment
+* Terraform automation

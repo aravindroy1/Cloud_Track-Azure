@@ -1,0 +1,13 @@
+SINGLE REGIO PATTERN AND GLOBA PATTERN
+
+
+WAF ARCHITECTURE:   Application Gateway Traffic flow
+
+Request Recieved --> TLS Decryption --> WAF Policy Evalution -->OWASP RULE MATCHING 
+                                                                    |
+                                                                    |
+                                                                    ALLOW/block
+                                                                    |
+                                                                    |
+                                                                    FORWARD TO BACKEND
+

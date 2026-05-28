@@ -1,0 +1,394 @@
+1)WHY THE AZURE DONT SUPPORT INTERNET GATEWAY AND HOW THE ROUTING HAPPENS INSIDE THE AZURE 
+2)What is teh inbuilt capabilities of azure for networking              
+3)How to setup the vnets and SUBNETS
+4) How we are trying to set up the segments 
+
+
+
+
+# 1) Why Azure Does Not Support Internet Gateway Like AWS & How Routing Happens in Azure
+
+## Why Azure Does Not Have Internet Gateway
+
+In AWS:
+- Internet access is provided using Internet Gateway (IGW).
+
+In Azure:
+- Azure networking is software-defined and managed internally by Microsoft.
+- Azure automatically provides internet routing for resources having:
+  - Public IP
+  - Load Balancer
+  - NAT Gateway
+  - Application Gateway
+
+So Azure does not require a separate Internet Gateway resource.
+
+Azure handles:
+- Routing
+- Internet connectivity
+- Internal packet forwarding
+automatically through Azure backbone infrastructure.
+
+---
+
+# How Routing Happens Inside Azure
+
+Azure uses:
+- System Routes
+- User Defined Routes (UDR)
+- BGP Routes
+
+---
+
+## Default Azure Routing Flow
+
+Example:
+
+VM:
+10.0.1.4
+
+Inside VNet:
+10.0.0.0/16
+
+Azure automatically creates routes.
+
+Example Route Table:
+
+| Destination | Next Hop |
+|-------------|-----------|
+| 10.0.0.0/16 | Virtual Network |
+| 0.0.0.0/0 | Internet |
+| Same subnet | Local |
+
+---
+
+## Routing Flow Example
+
+Internet User
+   |
+Azure Public IP
+   |
+Application Gateway / Load Balancer
+   |
+Web Subnet
+   |
+App Subnet
+   |
+DB Subnet
+
+Azure SDN (Software Defined Network) handles all packet routing internally.
+
+---
+
+## Internal Azure Routing
+
+Azure automatically routes:
+- Between subnets
+- Between VNets (Peering)
+- Between regions
+- Between private resources
+
+without needing routers manually.
+
+---
+
+# User Defined Routes (UDR)
+
+If we want custom routing:
+
+Example:
+Force traffic through Firewall
+
+Internet
+   |
+Azure Firewall
+   |
+App Subnet
+
+We create:
+- Route Tables
+- Associate with subnet
+
+Example:
+0.0.0.0/0 → Firewall IP
+
+---
+
+# Azure Networking Built on SDN
+
+Azure networking is based on:
+- Software Defined Networking (SDN)
+
+Meaning:
+- Routing is virtualized
+- Managed by Azure fabric
+- No physical router management required
+
+---
+
+# 2) Inbuilt Capabilities of Azure Networking
+
+Azure provides many built-in networking capabilities.
+
+---
+
+# Core Networking Services
+
+| Service | Purpose |
+|----------|----------|
+| VNet | Private network |
+| Subnet | Network segmentation |
+| NSG | Security rules |
+| Route Table | Custom routing |
+| Public IP | Internet access |
+| Load Balancer | Layer 4 traffic distribution |
+| Application Gateway | Layer 7 routing |
+| NAT Gateway | Secure outbound internet |
+| VPN Gateway | Hybrid connectivity |
+| ExpressRoute | Dedicated private connection |
+| Azure Firewall | Centralized security |
+| Bastion | Secure VM access |
+| DNS | Name resolution |
+
+---
+
+# Azure Built-In Features
+
+## 1. Automatic Routing
+Azure automatically creates:
+- Local routes
+- Internet routes
+- VNet routes
+
+No manual router configuration needed.
+
+---
+
+## 2. Built-In High Availability
+Azure networking is:
+- Redundant
+- Scalable
+- Fault tolerant
+
+---
+
+## 3. Isolation
+Each VNet is isolated by default.
+
+Communication allowed only if:
+- Peering configured
+- VPN configured
+- ExpressRoute configured
+
+---
+
+## 4. Security Features
+
+Azure provides:
+- NSG
+- Firewall
+- DDoS Protection
+- WAF
+- Private Endpoints
+
+---
+
+## 5. Traffic Management
+
+Supports:
+- Load balancing
+- URL routing
+- SSL termination
+- Traffic filtering
+
+---
+
+# 3) How to Setup VNets and Subnets
+
+---
+
+# Step 1: Create Resource Group
+
+Example:
+review-rg
+
+---
+
+# Step 2: Create VNet
+
+Example:
+
+VNet Name:
+review-vnet
+
+CIDR:
+10.0.0.0/16
+
+Range:
+10.0.0.0 → 10.0.255.255
+
+---
+
+# Step 3: Create Subnets
+
+Example:
+
+| Subnet | CIDR |
+|---------|------|
+| WebSubnet | 10.0.1.0/24 |
+| AppSubnet | 10.0.2.0/24 |
+| DBSubnet | 10.0.3.0/24 |
+
+---
+
+# Step 4: Attach Resources
+
+| Resource | Subnet |
+|-----------|---------|
+| Application Gateway | WebSubnet |
+| App Servers | AppSubnet |
+| Database | DBSubnet |
+
+---
+
+# Step 5: Configure NSG
+
+Example Rules:
+
+| Port | Purpose |
+|------|----------|
+| 80 | HTTP |
+| 443 | HTTPS |
+| 22 | SSH |
+| 3389 | RDP |
+
+---
+
+# Step 6: Configure NAT Gateway
+
+Attach NAT Gateway to:
+- App subnet
+- Private subnet
+
+for outbound internet access.
+
+---
+
+# Step 7: Configure Load Balancer/Application Gateway
+
+Layer 4:
+Azure Load Balancer
+
+Layer 7:
+Application Gateway
+
+---
+
+# Final Architecture
+
+Internet
+   |
+Application Gateway
+   |
+WebSubnet (10.0.1.0/24)
+   |
+AppSubnet (10.0.2.0/24)
+   |
+DBSubnet (10.0.3.0/24)
+
+VNet:
+10.0.0.0/16
+
+---
+
+# 4) How We Setup Network Segmentation
+
+Network segmentation means:
+Dividing the network into smaller isolated sections.
+
+---
+
+# Why Segmentation?
+
+Benefits:
+- Security
+- Isolation
+- Traffic control
+- Better management
+- Reduced attack surface
+
+---
+
+# Segmentation Example
+
+VNet:
+10.0.0.0/16
+
+Segment into:
+
+| Segment | CIDR | Purpose |
+|----------|------|----------|
+| Web | 10.0.1.0/24 | Frontend |
+| App | 10.0.2.0/24 | Backend |
+| DB | 10.0.3.0/24 | Database |
+
+---
+
+# Traffic Flow
+
+Internet
+   |
+Web Layer
+   |
+App Layer
+   |
+Database Layer
+
+Each layer isolated.
+
+---
+
+# Security Between Segments
+
+Using NSG:
+
+Example:
+- Web subnet can access App subnet
+- App subnet can access DB subnet
+- Internet cannot access DB subnet
+
+---
+
+# Segmentation Types
+
+| Type | Description |
+|------|--------------|
+| Horizontal | Same layer separation |
+| Vertical | Multi-tier separation |
+| Security Segmentation | Based on access control |
+| Environment Segmentation | Dev/Test/Prod isolation |
+
+---
+
+# Example Production Segmentation
+
+Production VNet:
+10.0.0.0/16
+
+Subnets:
+- Frontend
+- Backend
+- Database
+- Management
+- Monitoring
+
+Each subnet:
+- Separate NSG
+- Separate policies
+- Separate routing
+
+---
+
+# Real Interview Explanation
+
+“We create a VNet using a large CIDR block and divide it into multiple subnets for frontend, backend, and database layers. Azure internally handles routing using Software Defined Networking. We apply NSGs and Route Tables for security and traffic control. NAT Gateway provides secure outbound internet access for private resources.”

@@ -1,0 +1,305 @@
+1)WHAT IS CIDR
+2)HOW TO CREATE A SUBNETS WHAT IS THE RANGE 
+3)AGNTIC AI 
+4)NEED TO UNDERSTAND ABOUT NATGATEWAY 
+LAYERS ,PROOCOLS IP ADRESS SEGNEBTATION V NETS AND SUBNET  layer 7 and layer 4 and segmentation of ip addresss
+
+
+
+
+
+# CIDR (Classless Inter-Domain Routing)
+
+CIDR is used to define:
+- Network size
+- IP address range
+- Number of hosts
+
+Format:
+IP_Address/Prefix
+
+Example:
+10.0.0.0/16
+
+- 10.0.0.0 → Network Address
+- /16 → First 16 bits are network bits
+
+## Common CIDR Ranges
+
+| CIDR | Total IPs | Usable IPs |
+|------|------------|-------------|
+| /24 | 256 | 251 |
+| /25 | 128 | 123 |
+| /26 | 64 | 59 |
+| /27 | 32 | 27 |
+| /28 | 16 | 11 |
+
+Azure reserves 5 IPs in every subnet.
+
+---
+
+# VNet and Subnet
+
+## VNet
+Virtual Network in Azure.
+
+Example:
+10.0.0.0/16
+
+Range:
+10.0.0.0 → 10.0.255.255
+
+VNet acts as a private network in the cloud.
+
+---
+
+## Subnet
+
+Subnet is a smaller network inside the VNet.
+
+Example:
+
+| Subnet Name | CIDR | Range |
+|-------------|------|--------|
+| WebSubnet | 10.0.1.0/24 | 10.0.1.0 - 10.0.1.255 |
+| AppSubnet | 10.0.2.0/24 | 10.0.2.0 - 10.0.2.255 |
+| DBSubnet | 10.0.3.0/24 | 10.0.3.0 - 10.0.3.255 |
+
+## Important Rules
+- Subnets must not overlap
+- Subnets must be inside VNet range
+
+Correct:
+10.0.1.0/24
+10.0.2.0/24
+
+Wrong:
+10.0.1.0/24
+10.0.1.128/25
+
+(Overlapping subnet)
+
+---
+
+# IP Address Segmentation
+
+IP segmentation means dividing a large network into smaller networks.
+
+Example:
+
+VNet:
+10.0.0.0/16
+
+Segmented into:
+10.0.1.0/24
+10.0.2.0/24
+10.0.3.0/24
+
+Benefits:
+- Security
+- Isolation
+- Traffic control
+- Better management
+- Scalability
+
+---
+
+# NAT Gateway
+
+NAT = Network Address Translation
+
+NAT Gateway allows private resources to access the internet securely.
+
+## Architecture
+
+Internet
+   |
+Public IP
+   |
+NAT Gateway
+   |
+Private VM/Subnet
+
+Example:
+Private VM IP:
+10.0.2.4
+
+NAT converts:
+10.0.2.4 → Public IP
+
+Internet sees only the public IP.
+
+## Important Points
+- Outbound internet access only
+- More secure
+- No inbound internet access
+- Used for private subnets
+
+## Use Cases
+- AKS outbound internet
+- VM OS updates
+- Docker image pull
+- API communication
+
+---
+
+# OSI Layers
+
+| Layer | Name | Example |
+|------|------|---------|
+| 7 | Application | HTTP, HTTPS |
+| 6 | Presentation | SSL/TLS |
+| 5 | Session | Session Management |
+| 4 | Transport | TCP, UDP |
+| 3 | Network | IP |
+| 2 | Data Link | MAC Address |
+| 1 | Physical | Cable |
+
+---
+
+# Layer 4 vs Layer 7
+
+## Layer 4
+Works on:
+- TCP
+- UDP
+- Ports
+
+Can identify:
+- Source IP
+- Destination IP
+- Port numbers
+
+Cannot see:
+- URL
+- Headers
+- Cookies
+
+Example:
+TCP Port 443
+
+Layer 4 Load Balancer:
+IP + Port based routing
+
+---
+
+## Layer 7
+Works on:
+- HTTP
+- HTTPS
+
+Can understand:
+- URL
+- Headers
+- Cookies
+- Paths
+
+Example:
+/api
+/admin
+
+Layer 7 Application Gateway can route traffic based on URL path.
+
+Example:
+/api → Backend1
+/admin → Backend2
+
+---
+
+# Protocols
+
+| Protocol | Purpose |
+|----------|----------|
+| HTTP | Web communication |
+| HTTPS | Secure web communication |
+| TCP | Reliable communication |
+| UDP | Fast communication |
+| FTP | File transfer |
+| SSH | Secure remote access |
+| DNS | Domain to IP conversion |
+
+---
+
+# Agentic AI
+
+Agentic AI means AI systems that can:
+- Think
+- Plan
+- Make decisions
+- Use tools/APIs
+- Execute tasks automatically
+
+## Traditional AI
+User asks → AI responds
+
+## Agentic AI
+User asks →
+AI plans →
+Uses APIs/tools →
+Executes tasks →
+Returns result
+
+## Components of Agentic AI
+
+| Component | Purpose |
+|-----------|----------|
+| LLM | Brain |
+| Memory | Stores context |
+| Planner | Decides steps |
+| Tools/APIs | Executes actions |
+| Agent | Performs tasks |
+
+## Real World Examples
+- AI DevOps Copilot
+- AI Customer Support Agents
+- Autonomous Cloud Deployment
+- AI Monitoring Systems
+
+---
+
+# Real World Azure Architecture
+
+Internet
+   |
+Application Gateway (Layer 7)
+   |
+Web Subnet (10.0.1.0/24)
+   |
+App Subnet (10.0.2.0/24)
+   |
+DB Subnet (10.0.3.0/24)
+   |
+NAT Gateway
+   |
+Internet Access
+
+VNet:
+10.0.0.0/16
+
+Benefits:
+- Security
+- Scalability
+- Isolation
+- Better traffic management
+
+---
+
+# Interview One-Line Answers
+
+## CIDR
+CIDR defines network size and IP allocation using prefix notation.
+
+## Subnet
+Subnet divides a large network into smaller isolated networks.
+
+## NAT Gateway
+NAT Gateway provides secure outbound internet access for private resources.
+
+## Layer 4
+Layer 4 works with TCP/UDP protocols and ports.
+
+## Layer 7
+Layer 7 works with HTTP/HTTPS and understands application data like URLs and headers.
+
+## Agentic AI
+Agentic AI can autonomously plan, reason, and execute tasks using tools and APIs.

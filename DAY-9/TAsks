@@ -1,0 +1,385 @@
+)How WAF differ from NSG and firewall and agents
+2)What is layer 7 and Layer 4 what are the security concerns we have and how we are route the traffic 
+3)When we need to implement WAF and what are the OWASP 
+4)What are the SAP top 10 vulnerabilities 
+5)What is mean by SQL imjection cross site scripting How to inject the malecious code 
+
+
+
+# 1) Difference Between WAF, NSG, Firewall, and Agents
+
+| Component | Layer | Purpose | Filters Based On |
+|------------|-------|----------|------------------|
+| WAF | Layer 7 | Protect web applications | HTTP/HTTPS traffic |
+| NSG | Layer 3/4 | Control subnet/VM traffic | IP, Port, Protocol |
+| Firewall | Layer 3-7 | Centralized network security | IP, Port, URL, FQDN |
+| Agent | Host Level | Monitoring and security inside VM | OS/Application activity |
+
+---
+
+# NSG (Network Security Group)
+
+NSG works at:
+- Layer 3 (IP)
+- Layer 4 (TCP/UDP)
+
+Used for:
+- Allow/Deny traffic
+
+Filters:
+- Source IP
+- Destination IP
+- Port
+- Protocol
+
+Example:
+Allow:
+- Port 80
+- Port 443
+
+Block:
+- Port 22 from Internet
+
+Architecture:
+
+Internet
+   |
+NSG
+   |
+Subnet/VM
+
+---
+
+# Firewall
+
+Firewall provides:
+- Advanced traffic filtering
+- Centralized security
+
+Can inspect:
+- Network traffic
+- Application traffic
+
+Supports:
+- Threat intelligence
+- URL filtering
+- DNAT/SNAT
+- TLS inspection
+
+Example:
+Block:
+facebook.com
+
+Allow:
+company APIs
+
+---
+
+# WAF (Web Application Firewall)
+
+WAF works only for:
+- HTTP
+- HTTPS
+
+Layer:
+- Layer 7
+
+Purpose:
+- Protect web applications from attacks
+
+Protects Against:
+- SQL Injection
+- Cross Site Scripting (XSS)
+- Command Injection
+- Cookie Poisoning
+- Bot attacks
+
+Architecture:
+
+Internet
+   |
+WAF/Application Gateway
+   |
+Web Application
+
+---
+
+# Agent
+
+Agent is software installed inside:
+- VM
+- Server
+- Container
+
+Purpose:
+- Monitoring
+- Security
+- Logging
+- Threat detection
+
+Examples:
+- Monitoring Agent
+- Defender Agent
+- Antivirus Agent
+
+---
+
+# Real Difference
+
+| Feature | NSG | Firewall | WAF |
+|----------|------|----------|------|
+| IP Filtering | Yes | Yes | No |
+| Port Filtering | Yes | Yes | No |
+| HTTP Inspection | No | Limited | Yes |
+| SQL Injection Protection | No | Partial | Yes |
+| XSS Protection | No | Partial | Yes |
+| Layer | 3/4 | 3-7 | 7 |
+
+---
+
+# 2) Layer 4 vs Layer 7
+
+# Layer 4 (Transport Layer)
+
+Works with:
+- TCP
+- UDP
+- Ports
+
+Can see:
+- Source IP
+- Destination IP
+- Port number
+
+Cannot see:
+- URL
+- Headers
+- Payload
+
+Example:
+443 → Backend VM
+
+Routing based on:
+- IP
+- Port
+
+Security Concerns:
+- Port scanning
+- DDoS attacks
+- SYN flood
+- Unauthorized access
+
+Protection:
+- NSG
+- Firewall
+- Rate limiting
+
+---
+
+# Layer 7 (Application Layer)
+
+Works with:
+- HTTP
+- HTTPS
+
+Can inspect:
+- URL
+- Headers
+- Cookies
+- Request body
+
+Example:
+/api → Backend1
+/admin → Backend2
+
+Security Concerns:
+- SQL Injection
+- XSS
+- CSRF
+- Session hijacking
+- API abuse
+
+Protection:
+- WAF
+- Authentication
+- API Gateway
+- Input validation
+
+Traffic Flow:
+
+Internet
+   |
+WAF/Application Gateway
+   |
+Web Server
+   |
+App Server
+   |
+Database
+
+---
+
+# 3) When We Need WAF & What is OWASP
+
+# When We Need WAF
+
+Use WAF when:
+- Application is public
+- HTTP/HTTPS exposed
+- APIs exposed
+- Sensitive data handled
+
+Real Use Cases:
+- Banking applications
+- E-commerce websites
+- Login portals
+- APIs
+- Government applications
+
+---
+
+# OWASP
+
+OWASP =
+Open Web Application Security Project
+
+It defines:
+- Web security standards
+- Common vulnerabilities
+
+WAF protects against OWASP attacks.
+
+---
+
+# OWASP Top 10 Vulnerabilities
+
+| Vulnerability | Description |
+|----------------|-------------|
+| Broken Access Control | Unauthorized access |
+| Cryptographic Failures | Weak encryption |
+| Injection | Malicious query execution |
+| Insecure Design | Poor architecture |
+| Security Misconfiguration | Wrong configurations |
+| Vulnerable Components | Outdated libraries |
+| Authentication Failures | Weak login security |
+| Software Integrity Failures | Untrusted updates |
+| Logging Failures | Poor monitoring |
+| SSRF | Server-side request forgery |
+
+---
+
+# 4) SQL Injection
+
+SQL Injection is an attack where malicious SQL query is inserted into input fields.
+
+Example Query:
+
+SELECT * FROM users
+WHERE username='admin'
+AND password='123'
+
+Attacker enters:
+
+' OR '1'='1
+
+Final Query:
+
+SELECT * FROM users
+WHERE username=''
+OR '1'='1'
+
+Condition becomes TRUE.
+
+Attacker bypasses login.
+
+Risks:
+- Database theft
+- Authentication bypass
+- Data deletion
+- Full database compromise
+
+Prevention:
+- Parameterized queries
+- Prepared statements
+- Input validation
+- WAF
+
+---
+
+# 5) Cross Site Scripting (XSS)
+
+Attacker injects malicious JavaScript into website.
+
+Example:
+
+<script>alert('Hacked')</script>
+
+Browser executes script.
+
+Risks:
+- Cookie theft
+- Session hijacking
+- Redirect attacks
+- User impersonation
+
+Types:
+- Stored XSS
+- Reflected XSS
+- DOM XSS
+
+Prevention:
+- Input sanitization
+- Output encoding
+- CSP headers
+- WAF
+
+---
+
+# How Malicious Code Injection Happens
+
+Attackers inject code through:
+- Login forms
+- Search bars
+- URL parameters
+- API requests
+- Comment sections
+
+Flow:
+
+User Input
+   |
+Application
+   |
+Database/Browser
+
+If validation missing:
+- Malicious code executes
+
+---
+
+# Secure Architecture
+
+Internet
+   |
+WAF
+   |
+Application Gateway
+   |
+Web App
+   |
+Firewall
+   |
+Database
+
+Security Layers:
+- NSG
+- Firewall
+- WAF
+- Input validation
+- Authentication
+
+---
+
+# Interview Explanation
+
+“NSG works at Layer 3/4 for IP and port filtering, Firewall provides centralized advanced network security, and WAF protects web applications at Layer 7 against OWASP attacks like SQL Injection and XSS. Layer 4 handles TCP/UDP traffic, while Layer 7 handles HTTP/HTTPS application traffic and performs intelligent routing and inspection.”

@@ -1,0 +1,7 @@
+Step-1: Create a basicc LB
+ST-2: Create vm scale set with the 2 cpu 4gb ram ubuntu 30gb disk
+st-3: Deploy organic application through the bot strap scripts 
+st-4: Configure the auto scaling sets min and max based on the metrics 
+st-5: To monitor the traffic configure the azure monitor 
+st-5:Whenever the traffic increases we have to recieve a notification to email  to implement
+this use azure service bus
