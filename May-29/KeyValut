@@ -1,0 +1,161 @@
+Suppose your application needs MongoDB access.
+
+You store:
+
+MONGO_USERNAME=admin
+MONGO_PASSWORD=abc123
+
+in:
+
+Kubernetes Secret
+
+or
+
+App Service Configuration
+
+Application reads:
+
+username
+password
+
+and connects.
+
+Correct?
+
+Problem
+
+Now application wants to access:
+
+Key Vault
+Storage Account
+Cosmos DB
+
+How will it authenticate?
+
+You may think:
+
+Client ID
+Client Secret
+
+like a Service Principal.
+
+Example:
+
+AZURE_CLIENT_ID
+AZURE_CLIENT_SECRET
+
+stored as secrets.
+
+But now you again have a secret-management problem.
+
+Azure's Solution = Managed Identity
+
+Instead of:
+
+Username
+Password
+
+Azure says:
+
+I'll create an identity for the App Service itself
+Think Like This
+
+Suppose App Service is an employee.
+
+Without Managed Identity:
+
+Employee
+   |
+Username
+Password
+
+With Managed Identity:
+
+Employee
+   |
+Company ID Card
+
+No password needed.
+
+The ID card proves who he is.
+
+Example
+
+You create:
+
+fitness-app
+
+Enable:
+
+System Assigned Managed Identity
+
+Azure automatically creates:
+
+Identity for fitness-app
+
+You don't see any password.
+
+You don't manage any secret.
+
+Azure manages everything.
+
+Then How Does Key Vault Know?
+
+Suppose:
+
+Key Vault
+
+contains:
+
+MongoConnectionString
+
+You tell Key Vault:
+
+Allow fitness-app identity
+to read secrets
+
+Like this:
+
+Key Vault
+      |
+IAM
+      |
+Key Vault Secrets User
+      |
+fitness-app identity
+Runtime Flow
+
+Application starts.
+
+App Service
+
+asks Azure:
+
+Who am I?
+
+Azure replies:
+
+You are fitness-app identity
+
+Application then goes:
+
+Key Vault
+
+and says:
+
+Hi,
+I'm fitness-app identity
+Can I get MongoConnectionString?
+
+Key Vault checks:
+
+Does fitness-app
+have permission?
+
+If yes:
+
+Return Secret
+
+If no:
+
+403 Forbidden

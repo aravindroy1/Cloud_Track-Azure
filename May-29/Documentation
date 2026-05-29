@@ -1,0 +1,752 @@
+# Fitness Application – End-to-End Azure Architecture Implementation Guide
+
+## Architecture Overview
+
+The Fitness Application is designed using Azure cloud-native services with a secure, scalable, and highly available architecture.
+
+```text
+Users
+   |
+Azure Front Door Premium
+   |
+Application Gateway (WAF v2)
+   |
+Azure App Service
+   |
+Production Slot
+   |
+Green Slot
+   |
+Azure Cosmos DB (Mongo API)
+```
+
+---
+
+# Phase 1 – Network Foundation
+
+## Create Resource Group
+
+```text
+RG-FitnessApp-Prod
+```
+
+Purpose:
+
+* Logical container for all Azure resources.
+
+---
+
+## Create Virtual Network
+
+```text
+vnet-fitness-prod
+```
+
+Purpose:
+
+* Provides private networking between resources.
+
+---
+
+## Create Subnets
+
+### Application Gateway Subnet
+
+```text
+snet-appgateway
+```
+
+Purpose:
+
+* Dedicated subnet for Application Gateway.
+
+---
+
+### App Service Integration Subnet
+
+```text
+snet-appservice-integration
+```
+
+Purpose:
+
+* Used for App Service VNet Integration.
+
+---
+
+### Private Endpoint Subnet
+
+```text
+snet-private-endpoints
+```
+
+Purpose:
+
+* Hosts all private endpoints.
+
+---
+
+# Phase 2 – Secrets Management
+
+## Create Azure Key Vault
+
+```text
+kv-fitness-prod
+```
+
+Store:
+
+```text
+Mongo Connection String
+API Keys
+JWT Secrets
+Application Secrets
+```
+
+---
+
+## Enable Managed Identity
+
+Enable:
+
+```text
+System Assigned Managed Identity
+```
+
+for:
+
+```text
+fitness-app-prod
+```
+
+Grant:
+
+```text
+Key Vault Secrets User
+```
+
+permission to App Service.
+
+Flow:
+
+```text
+App Service
+    |
+Managed Identity
+    |
+Key Vault
+    |
+Secrets
+```
+
+---
+
+# Phase 3 – Database Layer
+
+## Create Cosmos DB
+
+Service:
+
+```text
+Azure Cosmos DB for MongoDB
+```
+
+Name:
+
+```text
+cosmos-fitness-prod
+```
+
+Purpose:
+
+* Store users
+* Store workouts
+* Store nutrition plans
+* Store application data
+
+---
+
+## Create Private Endpoint
+
+```text
+pe-cosmos-fitness-prod
+```
+
+Subnet:
+
+```text
+snet-private-endpoints
+```
+
+Purpose:
+
+* Remove public database access.
+
+---
+
+## Create Private DNS Zone
+
+```text
+privatelink.mongo.cosmos.azure.com
+```
+
+Link DNS Zone to:
+
+```text
+vnet-fitness-prod
+```
+
+Purpose:
+
+* Resolve Cosmos DB hostname to private IP.
+
+---
+
+# Phase 4 – Application Layer
+
+## Create App Service Plan
+
+```text
+asp-fitness-prod
+```
+
+Runtime:
+
+```text
+Node.js 22 LTS
+```
+
+---
+
+## Create App Service
+
+```text
+fitness-app-prod
+```
+
+Purpose:
+
+* Host backend APIs
+* Host application services
+
+---
+
+## Configure Environment Variables
+
+Add:
+
+```text
+MONGO_CONNECTION_STRING
+
+JWT_SECRET
+
+NODE_ENV=production
+
+PORT=8080
+```
+
+Future Enhancement:
+
+```text
+Key Vault References
+```
+
+instead of plain text values.
+
+---
+
+## Configure VNet Integration
+
+Connect:
+
+```text
+fitness-app-prod
+```
+
+to:
+
+```text
+snet-appservice-integration
+```
+
+Purpose:
+
+```text
+App Service
+      |
+VNet
+      |
+Private Endpoint
+      |
+Cosmos DB
+```
+
+---
+
+# Phase 5 – Blue Green Deployment
+
+## Create Deployment Slots
+
+### Green Slot
+
+```text
+fitness-app-prod-green
+```
+
+Purpose:
+
+* New application release deployment.
+
+---
+
+### Production Slot
+
+```text
+fitness-app-prod
+```
+
+Purpose:
+
+* Live production traffic.
+
+---
+
+## Deployment Flow
+
+Current:
+
+```text
+Production
+|
+Version 1.0
+```
+
+Deploy:
+
+```text
+Green
+|
+Version 2.0
+```
+
+Test:
+
+```text
+fitness-app-prod-green.azurewebsites.net
+```
+
+Swap:
+
+```text
+Green -> Production
+
+Production -> Green
+```
+
+Benefits:
+
+* Zero downtime deployment
+* Instant rollback
+* Safe releases
+
+---
+
+# Phase 6 – CI/CD Pipeline
+
+## Configure Deployment Center
+
+Source:
+
+```text
+GitHub
+```
+
+Provider:
+
+```text
+GitHub Actions
+```
+
+Repository:
+
+```text
+Fitness Application Repository
+```
+
+Branch:
+
+```text
+main
+```
+
+Deployment Target:
+
+```text
+Green Slot
+```
+
+Flow:
+
+```text
+Developer Push
+      |
+GitHub
+      |
+GitHub Actions
+      |
+Green Slot
+      |
+Testing
+      |
+Swap
+      |
+Production
+```
+
+---
+
+# Phase 7 – Application Gateway
+
+## Create Application Gateway
+
+Name:
+
+```text
+agw-fitness-prod
+```
+
+Tier:
+
+```text
+WAF v2
+```
+
+Autoscaling:
+
+```text
+Min: 1
+Max: 2
+```
+
+---
+
+## Create WAF Policy
+
+Name:
+
+```text
+waf-fitness-prod
+```
+
+Protection:
+
+```text
+OWASP Core Rule Set
+```
+
+Protection Against:
+
+```text
+SQL Injection
+
+Cross Site Scripting (XSS)
+
+Remote File Inclusion
+
+Command Injection
+
+Path Traversal
+```
+
+---
+
+## Configure Frontend
+
+```text
+Public Frontend
+Private Frontend
+```
+
+Private IP:
+
+```text
+10.0.1.10
+```
+
+---
+
+## Configure Backend Pool
+
+Name:
+
+```text
+bp-fitness-app
+```
+
+Target:
+
+```text
+fitness-app-prod.azurewebsites.net
+```
+
+---
+
+## Configure Backend Settings
+
+Protocol:
+
+```text
+HTTPS
+```
+
+Port:
+
+```text
+443
+```
+
+Host Override:
+
+```text
+Pick hostname from backend target
+```
+
+---
+
+## Configure Routing Rule
+
+Name:
+
+```text
+rule-fitness-app
+```
+
+Flow:
+
+```text
+Application Gateway
+      |
+Routing Rule
+      |
+Backend Pool
+      |
+App Service
+```
+
+---
+
+## Validate Backend Health
+
+Expected:
+
+```text
+Healthy
+```
+
+Response:
+
+```text
+HTTP 200 OK
+```
+
+---
+
+# Phase 8 – Azure Front Door Premium
+
+## Create Front Door Profile
+
+Name:
+
+```text
+afd-fitness-prod
+```
+
+Tier:
+
+```text
+Premium
+```
+
+Purpose:
+
+* Global traffic routing
+* CDN
+* SSL termination
+* DDoS protection
+* Edge acceleration
+
+---
+
+## Create Endpoint
+
+Example:
+
+```text
+fitness-global.azurefd.net
+```
+
+---
+
+## Create Origin Group
+
+```text
+og-fitness-prod
+```
+
+Origin:
+
+```text
+Application Gateway
+```
+
+---
+
+## Create Route
+
+Name:
+
+```text
+route-fitness-app
+```
+
+Configuration:
+
+```text
+Pattern:
+/*
+
+Protocols:
+HTTP + HTTPS
+
+Redirect:
+HTTP -> HTTPS
+
+Forwarding:
+Match incoming request
+```
+
+---
+
+## Traffic Flow
+
+```text
+Users
+     |
+Nearest Azure Edge POP
+     |
+Microsoft Global Network
+     |
+Azure Front Door
+     |
+Application Gateway
+     |
+App Service
+     |
+Cosmos DB
+```
+
+Benefits:
+
+```text
+Reduced Latency
+
+Global Performance
+
+Improved Availability
+
+Centralized Security
+```
+
+---
+
+# Phase 9 – Application Validation
+
+## Verify
+
+Application Gateway Backend Health:
+
+```text
+Healthy
+```
+
+---
+
+## Verify
+
+App Service Logs:
+
+```text
+Application Started
+
+Mongo Connected
+
+No Runtime Errors
+```
+
+---
+
+## Verify
+
+Green Slot Deployment:
+
+```text
+Application Running
+```
+
+---
+
+## Verify
+
+Production Swap:
+
+```text
+Successful
+```
+
+---
+
+# Final Production Architecture
+
+```text
+Users
+   |
+Azure Front Door Premium
+   |
+Application Gateway (WAF v2)
+   |
+Azure App Service
+   |
+Production Slot
+   |
+Green Slot
+   |
+Azure Cosmos DB (Mongo API)
+   |
+Private Endpoint
+   |
+Private DNS
+```
+
+## Security Features
+
+* Managed Identity
+* Azure Key Vault
+* Private Endpoints
+* Private DNS
+* WAF Protection
+* HTTPS Everywhere
+* Zero Trust Connectivity
+
+## Deployment Features
+
+* GitHub Actions CI/CD
+* Blue-Green Deployment
+* Zero Downtime Release
+* Instant Rollback
+
+## High Availability Features
+
+* Front Door Global Routing
+* Application Gateway Health Probes
+* Autoscaling App Service
+* Cosmos DB High Availability

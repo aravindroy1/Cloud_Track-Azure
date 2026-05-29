@@ -1,0 +1,240 @@
+What is Azure FrontDoor
+
+Need to implement Azure front DOor + CDN 
+  |
+  |
+Application Gateway + WAF 
+  |
+  |
+App service ----Deployment scale
+
+Need to perform Blue
+
+
+"If my app is in US and user is in India, eventually the request still needs to reach the US. So how does Front Door reduce latency?"
+
+The answer is:
+
+Front Door does not magically move your application closer to the user.
+It reduces latency in other ways.
+
+Let's break it down.
+
+Case 1: Application Gateway Only
+
+Suppose:
+
+User (India)
+      |
+      |
+Internet
+      |
+      |
+Application Gateway (US)
+      |
+      |
+App Service (US)
+
+When user sends a request:
+
+India ---> Entire Internet ---> US
+
+The traffic travels through multiple ISP networks.
+
+Problems:
+
+Unpredictable routing
+Network congestion
+Packet loss
+Multiple hops
+
+Latency may be:
+
+250ms - 350ms
+Case 2: Azure Front Door
+India User
+      |
+      |
+Nearest Microsoft Edge (India)
+      |
+      |
+Microsoft Global Backbone
+      |
+      |
+US Backend
+
+Now:
+
+India ---> Chennai/Mumbai Edge
+
+This part is short.
+
+After that:
+
+Edge ---> US
+
+travels inside Microsoft's private network.
+
+Why is Microsoft's Backbone Faster?
+
+Imagine two roads:
+
+Public Internet
+India
+  |
+ISP1
+  |
+ISP2
+  |
+ISP3
+  |
+ISP4
+  |
+US
+
+Many unknown routes.
+
+Microsoft Backbone
+India Edge
+     |
+Microsoft Network
+     |
+US Region
+
+Dedicated high-speed network.
+
+Less congestion.
+
+Less packet loss.
+
+More predictable.
+
+Example
+
+Without Front Door:
+
+India -> ISP -> ISP -> ISP -> US
+
+300ms
+
+With Front Door:
+
+India -> Azure Edge (10ms)
+
+Azure Backbone -> US (150ms)
+
+Total:
+
+160ms
+
+This is where improvement comes from.
+
+Then Why Not Use Application Gateway?
+
+Because Application Gateway is regional.
+
+Suppose:
+
+Application Gateway
+Location = East US
+
+All users:
+
+India User --> East US
+Europe User --> East US
+Australia User --> East US
+
+No intelligent global routing.
+
+Application Gateway Scope
+
+Think:
+
+Inside one region
+
+Example:
+
+East US
+
+Application Gateway
+       |
+       +--> VM1
+       +--> VM2
+       +--> VM3
+
+Load balancing inside a region.
+
+Front Door Scope
+
+Think:
+
+Worldwide
+
+Example:
+
+India User --> Southeast Asia
+Europe User --> West Europe
+US User --> East US
+
+Global routing.
+
+Biggest Benefit: Multi-Region Failover
+
+Suppose:
+
+App1 = East US
+App2 = West Europe
+
+With Front Door:
+
+Front Door
+    |
+    +--> East US
+    +--> Europe
+
+If East US fails:
+
+Front Door
+    |
+    +--> Europe
+
+Automatic failover.
+
+Application Gateway cannot do this globally.
+
+Then Where Do We Use Both Together?
+
+Most enterprises use:
+
+Internet
+     |
+Front Door
+     |
+Application Gateway
+     |
+App Service / AKS / VM
+Front Door Handles
+Global routing
+Global load balancing
+CDN
+Edge POPs
+Global WAF
+Multi-region failover
+Application Gateway Handles
+Regional load balancing
+Regional WAF
+Path-based routing
+Backend pool routing
+Real Architecture
+Users Worldwide
+        |
+Azure Front Door
+        |
+   ----------------
+   |              |
+US Region      Europe Region
+   |              |
+Application    Application
+Gateway        Gateway
+   |              |
+AKS/AppSvc     AKS/AppSvc
