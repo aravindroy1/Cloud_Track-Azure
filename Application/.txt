@@ -4,3 +4,13 @@ capability to read the logs analyse the logs and identify the errors sending the
 xxxxxxx4)Design a Agent which can understand the ur monitoring dashboards,thresholds if any threshold excesdded
 the agent has to create a alret and sent it mail/slack agent should have capability to create a alerts
 automatically based on prompts
+
+
+
+What is AI and ML why we need to incorporate into our systems 
+What is mean by NLP and what is the diff between NLP and neural networks 
+What is mean by rulebased Ml and Predictive ML ? In which scenarios are we going with rule based and predictive based 
+What is mean by Generative AI how it is fetching the data from the LLms 
+What is meant  by agentic AI sysytem and how agrnts are taking the descion or predicting the 
+results 
+How agents are validating the data 
